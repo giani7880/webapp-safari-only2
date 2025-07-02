@@ -18,6 +18,7 @@
       margin-top: 10px;
       width: 360px;
       height: 360px;
+      cursor: pointer;
     }
 
     .controls {
@@ -47,17 +48,23 @@
       background: linear-gradient(145deg, #a3f7cf, #79d2b8);
       padding: 0;
       overflow: hidden;
-      font-size: 32px; /* ingrandisco un po’ l’icona */
+      font-size: 32px; /* icona grande */
+    }
+
+    #startBtn {
+      background: linear-gradient(145deg, #f7c59f, #d2975f);
+      font-size: 28px;
     }
   </style>
 </head>
 <body>
   <h2> ♞ Gioco del Cavallo ♞ </h2>
-  <canvas id="board" width="360" height="360"></canvas>
+  <canvas id="board" width="360" height="360" tabindex="0"></canvas>
 
   <div class="controls">
     <button id="nextBtn" class="circle-button">▶</button>
     <button id="resetBtn" class="circle-button" aria-label="Reset">↻</button>
+    <button id="startBtn" class="circle-button" aria-label="Start">▶▶</button>
   </div>
 
   <script>
@@ -68,11 +75,15 @@
 
     let tour = [];
     let step = 0;
+    let manualMode = true;  // Se true, utente muove il cavallo manualmente
+    let currentPos = null;  // Posizione corrente del cavallo [x,y]
 
+    // Verifica coordinate valide
     function valid(x, y) {
       return x >= 0 && x < size && y >= 0 && y < size;
     }
 
+    // Mosse valide del cavallo da (x,y)
     function knightMoves(x, y) {
       const moves = [
         [x + 2, y + 1], [x + 2, y - 1], [x - 2, y + 1], [x - 2, y - 1],
@@ -81,12 +92,13 @@
       return moves.filter(([mx, my]) => valid(mx, my));
     }
 
+    // Algoritmo Warnsdorff da (startX, startY)
     function warnsdorffTour(startX, startY) {
       const board = Array.from({ length: size }, () => Array(size).fill(-1));
       board[startY][startX] = 0;
       let path = [[startX, startY]];
 
-      for (let step = 1; step < size * size; step++) {
+      for (let s = 1; s < size * size; s++) {
         const [x, y] = path[path.length - 1];
         const candidates = knightMoves(x, y)
           .filter(([cx, cy]) => board[cy][cx] === -1)
@@ -96,15 +108,16 @@
           })
           .sort((a, b) => a.count - b.count);
 
-        if (candidates.length === 0) return null;
+        if (candidates.length === 0) break;
         const nextMove = candidates[0].pos;
-        board[nextMove[1]][nextMove[0]] = step;
+        board[nextMove[1]][nextMove[0]] = s;
         path.push(nextMove);
       }
 
       return path;
     }
 
+    // Disegna scacchiera e mosse fino allo step corrente
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = "bold 14px sans-serif";
@@ -124,38 +137,100 @@
         ctx.fillStyle = "#000";
         ctx.fillText(i + 1, x * cell + 4, y * cell + 2);
       }
+
+      if (currentPos) {
+        // evidenzia la posizione corrente del cavallo
+        ctx.fillStyle = "blue";
+        ctx.beginPath();
+        ctx.arc(currentPos[0] * cell + cell / 2, currentPos[1] * cell + cell / 2, cell / 3, 0, 2 * Math.PI);
+        ctx.fill();
+
+        if (manualMode) {
+          // evidenzia mosse valide per l’utente
+          const moves = knightMoves(currentPos[0], currentPos[1]);
+          ctx.fillStyle = "rgba(0, 128, 255, 0.4)";
+          for (const [mx, my] of moves) {
+            ctx.fillRect(mx * cell, my * cell, cell, cell);
+          }
+        }
+      }
     }
 
-    function drawKnight(x, y) {
-      ctx.fillStyle = "blue";
-      ctx.beginPath();
-      ctx.arc(x * cell + cell / 2, y * cell + cell / 2, cell / 3, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-
+    // Avanza una mossa (solo se in modalità algoritmo)
     function nextMove() {
+      if (manualMode) {
+        alert("Usa il pulsante Start per far muovere il cavallo automaticamente.");
+        return;
+      }
       if (step >= tour.length) {
         alert("Tour completato!");
         return;
       }
-      drawBoard();
-      const [x, y] = tour[step];
-      drawKnight(x, y);
       step++;
+      currentPos = tour[step - 1];
+      drawBoard();
     }
 
+    // Reset: tour da 0,0 e modalità manuale attiva
     function resetBoard() {
       tour = warnsdorffTour(0, 0);
-      if (!tour) {
-        alert("Impossibile calcolare il tour del cavallo da questa posizione");
-        return;
-      }
       step = 0;
+      manualMode = true;
+      currentPos = null;
       drawBoard();
     }
+
+    // Start algoritmo: calcola tour da posizione attuale, poi passa in automatico
+    function startAlgorithm() {
+      if (!currentPos) {
+        alert("Seleziona prima una posizione cliccando sulla scacchiera.");
+        return;
+      }
+      tour = warnsdorffTour(currentPos[0], currentPos[1]);
+      if (tour.length === 0) {
+        alert("Non è possibile calcolare un tour da questa posizione.");
+        return;
+      }
+      step = 1; // partiamo da 1 perché currentPos è già posizionato
+      manualMode = false;
+      drawBoard();
+    }
+
+    // Gestione click scacchiera
+    canvas.addEventListener("click", e => {
+      if (!manualMode) return; // disabilita clic in modalità algoritmo
+
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / cell);
+      const y = Math.floor((e.clientY - rect.top) / cell);
+
+      if (!valid(x, y)) return;
+
+      if (!currentPos) {
+        // prima selezione posizione cavallo
+        currentPos = [x, y];
+        step = 0;
+        tour = [[x, y]];
+        drawBoard();
+        return;
+      }
+
+      // Seleziona una mossa valida (tra quelle del cavallo)
+      const validMoves = knightMoves(currentPos[0], currentPos[1]);
+      if (validMoves.some(([mx, my]) => mx === x && my === y)) {
+        // aggiorna posizione e aggiungi alla lista mosse
+        currentPos = [x, y];
+        tour.push(currentPos);
+        step++;
+        drawBoard();
+      } else {
+        alert("Mossa non valida per il cavallo!");
+      }
+    });
 
     document.getElementById("nextBtn").addEventListener("click", nextMove);
     document.getElementById("resetBtn").addEventListener("click", resetBoard);
+    document.getElementById("startBtn").addEventListener("click", startAlgorithm);
 
     window.onload = resetBoard;
 
