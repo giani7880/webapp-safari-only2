@@ -1,4 +1,5 @@
-html lang="it">
+<!DOCTYPE html>
+<html lang="it">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -24,7 +25,7 @@ html lang="it">
     }
 
     button {
-      padding: 16px 24px;
+      padding: 12px 16px;
       font-size: 20px;
       font-weight: bold;
       border-radius: 10px;
@@ -33,7 +34,9 @@ html lang="it">
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
     }
 
     #nextBtn {
@@ -45,128 +48,10 @@ html lang="it">
     }
 
     button img {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
     }
   </style>
 </head>
 <body>
-  <h2>Tour del Cavallo ♞ - Esecuzione con algoritmo</h2>
-
-  <canvas id="board" width="360" height="360"></canvas><br />
-
-  <div class="buttons">
-    <button id="nextBtn">
-      <img src="https://cdn-icons-png.flaticon.com/512/727/727245.png" alt="Avanti" />
-      Avanti
-    </button>
-    <button id="resetBtn">
-      <img src="https://cdn-icons-png.flaticon.com/512/860/860790.png" alt="Reset" />
-      Reset
-    </button>
-  </div>
-
-  <script>
-    const canvas = document.getElementById("board");
-    const ctx = canvas.getContext("2d");
-    const size = 8;
-    const cell = canvas.width / size;
-
-    const horseImg = new Image();
-    horseImg.src = "https://thumbs.dreamstime.com/b/black-knight-chess-piece-silhouette-white-background-illustration-260876553.jpg";
-
-    let tour = [];
-    let step = 0;
-
-    function valid(x, y) {
-      return x >= 0 && x < size && y >= 0 && y < size;
-    }
-
-    function knightMoves(x, y) {
-      const moves = [
-        [x + 2, y + 1], [x + 2, y - 1], [x - 2, y + 1], [x - 2, y - 1],
-        [x + 1, y + 2], [x + 1, y - 2], [x - 1, y + 2], [x - 1, y - 2],
-      ];
-      return moves.filter(([mx, my]) => valid(mx, my));
-    }
-
-    function warnsdorffTour(startX, startY) {
-      const board = Array.from({ length: size }, () => Array(size).fill(-1));
-      board[startY][startX] = 0;
-      let path = [[startX, startY]];
-
-      for (let step = 1; step < size * size; step++) {
-        const [x, y] = path[path.length - 1];
-        const candidates = knightMoves(x, y)
-          .filter(([cx, cy]) => board[cy][cx] === -1)
-          .map(([cx, cy]) => {
-            const nextMoves = knightMoves(cx, cy).filter(([nx, ny]) => board[ny][nx] === -1);
-            return { pos: [cx, cy], count: nextMoves.length };
-          })
-          .sort((a, b) => a.count - b.count);
-
-        if (candidates.length === 0) return null;
-
-        const nextMove = candidates[0].pos;
-        board[nextMove[1]][nextMove[0]] = step;
-        path.push(nextMove);
-      }
-      return path;
-    }
-
-    function drawBoard() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.font = "bold 12px sans-serif";
-      ctx.textBaseline = "top";
-
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
-          ctx.fillStyle = (x + y) % 2 === 0 ? "#f0d9b5" : "#b58863";
-          ctx.fillRect(x * cell, y * cell, cell, cell);
-        }
-      }
-
-      for (let i = 0; i < step; i++) {
-        const [x, y] = tour[i];
-        ctx.fillStyle = "rgba(255, 255, 0, 0.6)";
-        ctx.fillRect(x * cell, y * cell, cell, cell);
-        ctx.fillStyle = "black";
-        ctx.fillText(i + 1, x * cell + 4, y * cell + 4);
-      }
-    }
-
-    function drawKnight(x, y) {
-      horseImg.onload = () => {
-        ctx.drawImage(horseImg, x * cell + 4, y * cell + 4, cell - 8, cell - 8);
-      };
-      ctx.drawImage(horseImg, x * cell + 4, y * cell + 4, cell - 8, cell - 8);
-    }
-
-    function nextMove() {
-      if (step >= tour.length) {
-        alert("Tour completato!");
-        return;
-      }
-      drawBoard();
-      const [x, y] = tour[step];
-      drawKnight(x, y);
-      step++;
-    }
-
-    function resetTour() {
-      tour = warnsdorffTour(0, 0);
-      if (!tour) {
-        alert("Impossibile calcolare il tour del cavallo da questa posizione");
-        return;
-      }
-      step = 0;
-      drawBoard();
-    }
-
-    document.getElementById("nextBtn").addEventListener("click", nextMove);
-    document.getElementById("resetBtn").addEventListener("click", resetTour);
-
-    window.onload = resetTour;
-  </script>
-</body>
-</html>
+  <h2
