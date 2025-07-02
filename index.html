@@ -14,8 +14,14 @@
       border: 2px solid black;
       margin-top: 10px;
     }
-    button {
+    .buttons {
       margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    button {
       padding: 18px 36px;
       font-size: 24px;
       font-weight: bold;
@@ -35,7 +41,11 @@
 <body>
   <h2>Tour del Cavallo ♞ - Esecuzione con algoritmo</h2>
   <canvas id="board" width="360" height="360"></canvas><br />
-  <button id="nextBtn">▶ Avanti</button>
+  
+  <div class="buttons">
+    <button id="nextBtn">▶ Avanti</button>
+    <button id="resetBtn">🔄 Reset</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("board");
@@ -121,9 +131,7 @@
       step++;
     }
 
-    document.getElementById("nextBtn").addEventListener("click", nextMove);
-
-    window.onload = () => {
+    function resetTour() {
       tour = warnsdorffTour(0, 0);
       if (!tour) {
         alert("Impossibile calcolare il tour del cavallo da questa posizione");
@@ -131,7 +139,12 @@
       }
       step = 0;
       drawBoard();
-    };
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", nextMove);
+    document.getElementById("resetBtn").addEventListener("click", resetTour);
+
+    window.onload = resetTour;
   </script>
 </body>
 </html>
