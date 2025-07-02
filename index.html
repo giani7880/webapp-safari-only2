@@ -16,11 +16,11 @@
     }
     button {
       margin-top: 30px;
-      padding: 20px 40px;
-      font-size: 28px;
+      padding: 18px 36px;
+      font-size: 24px;
       font-weight: bold;
       cursor: pointer;
-      border-radius: 12px;
+      border-radius: 10px;
       background-color: #007bff;
       color: white;
       border: none;
@@ -34,7 +34,7 @@
 </head>
 <body>
   <h2>Tour del Cavallo ♞ - Esecuzione con algoritmo</h2>
-  <canvas id="board" width="400" height="400"></canvas><br />
+  <canvas id="board" width="360" height="360"></canvas><br />
   <button id="nextBtn">▶ Avanti</button>
 
   <script>
@@ -84,7 +84,7 @@
 
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.font = "bold 14px sans-serif";
+      ctx.font = "bold 12px sans-serif";
       ctx.textBaseline = "top";
 
       for (let y = 0; y < size; y++) {
@@ -99,7 +99,7 @@
         ctx.fillStyle = "rgba(255, 255, 0, 0.6)";
         ctx.fillRect(x * cell, y * cell, cell, cell);
         ctx.fillStyle = "black";
-        ctx.fillText(i + 1, x * cell + 5, y * cell + 5);
+        ctx.fillText(i + 1, x * cell + 4, y * cell + 4);
       }
     }
 
