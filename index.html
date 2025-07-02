@@ -3,63 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Tour del Cavallo - Algoritmo</title>
+  <title>Algoritmo</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       margin-top: 20px;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
+
     canvas {
       border: 2px solid black;
       margin-top: 10px;
+      width: 360px;
+      height: 360px;
     }
-    .buttons {
+
+    .controls {
       margin-top: 20px;
       display: flex;
       justify-content: center;
       gap: 20px;
     }
-    button {
-      width: 80px;
-      height: 80px;
+
+    .circle-button {
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
+      font-size: 28px;
       border: none;
+      background-color: #007AFF;
+      color: white;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    #resetBtn {
+      background: linear-gradient(145deg, #a3f7cf, #79d2b8);
       padding: 0;
     }
-    #nextBtn {
-      background-color: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #nextBtn svg {
-      width: 40px;
-      height: 40px;
-      fill: white;
-    }
-    #resetBtn {
-      background: linear-gradient(to right, #3ecf8e, #00c7b7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+
     #resetBtn img {
-      width: 40px;
-      height: 40px;
-      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
-  <h2>Tour del Cavallo ♞ - Calcolo con algoritmo</h2>
+  <h2> ♞ Gioco del Cavallo ♞ </h2>
   <canvas id="board" width="360" height="360"></canvas>
-  <div class="buttons">
-    <button id="nextBtn" title="Avanti">
-      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </button>
-    <button id="resetBtn" title="Reset">
+
+  <div class="controls">
+    <button id="nextBtn" class="circle-button">▶</button>
+    <button id="resetBtn" class="circle-button">
       <img src="reset.png" alt="Reset" />
     </button>
   </div>
@@ -105,6 +108,7 @@
         board[nextMove[1]][nextMove[0]] = step;
         path.push(nextMove);
       }
+
       return path;
     }
 
@@ -122,10 +126,10 @@
 
       for (let i = 0; i < step; i++) {
         const [x, y] = tour[i];
-        ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+        ctx.fillStyle = "rgba(0, 255, 170, 0.5)";
         ctx.fillRect(x * cell, y * cell, cell, cell);
-        ctx.fillStyle = "black";
-        ctx.fillText(i + 1, x * cell + 5, y * cell + 5);
+        ctx.fillStyle = "#000";
+        ctx.fillText(i + 1, x * cell + 4, y * cell + 2);
       }
     }
 
@@ -147,20 +151,34 @@
       step++;
     }
 
-    function resetTour() {
+    function resetBoard() {
       tour = warnsdorffTour(0, 0);
-      step = 0;
       if (!tour) {
-        alert("Impossibile calcolare il tour del cavallo");
+        alert("Impossibile calcolare il tour del cavallo da questa posizione");
         return;
       }
+      step = 0;
       drawBoard();
     }
 
     document.getElementById("nextBtn").addEventListener("click", nextMove);
-    document.getElementById("resetBtn").addEventListener("click", resetTour);
+    document.getElementById("resetBtn").addEventListener("click", resetBoard);
 
-    window.onload = resetTour;
+    window.onload = resetBoard;
+
+    // Disabilita zoom su mobile (doppio tap e pinch)
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = new Date().getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
   </script>
 </body>
 </html>
