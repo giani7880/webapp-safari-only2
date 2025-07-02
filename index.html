@@ -14,28 +14,45 @@
       border: 2px solid black;
       margin-top: 10px;
     }
-    button {
+    .controls {
       margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    button {
       padding: 20px 40px;
       font-size: 36px;
       font-weight: bold;
       cursor: pointer;
       border-radius: 12px;
-      background-color: #007bff;
-      color: white;
       border: none;
       touch-action: manipulation;
       user-select: none;
     }
-    button:hover {
+    #nextBtn {
+      background-color: #007bff;
+      color: white;
+    }
+    #nextBtn:hover {
       background-color: #0056b3;
+    }
+    #resetBtn {
+      background-color: #ffc107;
+      color: black;
+    }
+    #resetBtn:hover {
+      background-color: #e0a800;
     }
   </style>
 </head>
 <body>
   <h2>Tour del Cavallo ♞ - Calcolo con algoritmo</h2>
   <canvas id="board" width="360" height="360"></canvas><br />
-  <button id="nextBtn">▶</button>
+  <div class="controls">
+    <button id="nextBtn">▶</button>
+    <button id="resetBtn">🔄</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("board");
@@ -74,7 +91,6 @@
           .sort((a, b) => a.count - b.count);
 
         if (candidates.length === 0) return null;
-
         const nextMove = candidates[0].pos;
         board[nextMove[1]][nextMove[0]] = step;
         path.push(nextMove);
@@ -121,17 +137,20 @@
       step++;
     }
 
-    document.getElementById("nextBtn").addEventListener("click", nextMove);
-
-    window.onload = () => {
+    function resetTour() {
       tour = warnsdorffTour(0, 0);
+      step = 0;
       if (!tour) {
         alert("Impossibile calcolare il tour del cavallo da questa posizione");
         return;
       }
-      step = 0;
       drawBoard();
-    };
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", nextMove);
+    document.getElementById("resetBtn").addEventListener("click", resetTour);
+
+    window.onload = resetTour;
   </script>
 </body>
 </html>
