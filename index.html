@@ -10,10 +10,12 @@
       text-align: center;
       margin-top: 20px;
     }
+
     canvas {
       border: 2px solid black;
       margin-top: 10px;
     }
+
     .buttons {
       margin-top: 30px;
       display: flex;
@@ -21,30 +23,48 @@
       gap: 20px;
       flex-wrap: wrap;
     }
+
     button {
-      padding: 18px 36px;
-      font-size: 24px;
+      padding: 16px 24px;
+      font-size: 20px;
       font-weight: bold;
-      cursor: pointer;
       border-radius: 10px;
-      background-color: #007bff;
       color: white;
       border: none;
-      touch-action: manipulation;
-      user-select: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    button:hover {
-      background-color: #0056b3;
+
+    #nextBtn {
+      background-color: #007bff;
+    }
+
+    #resetBtn {
+      background-color: #28a745;
+    }
+
+    button img {
+      width: 24px;
+      height: 24px;
     }
   </style>
 </head>
 <body>
   <h2>Tour del Cavallo ♞ - Esecuzione con algoritmo</h2>
+
   <canvas id="board" width="360" height="360"></canvas><br />
-  
+
   <div class="buttons">
-    <button id="nextBtn">▶ Avanti</button>
-    <button id="resetBtn">🔄 Reset</button>
+    <button id="nextBtn">
+      <img src="https://cdn-icons-png.flaticon.com/512/727/727245.png" alt="Avanti" />
+      Avanti
+    </button>
+    <button id="resetBtn">
+      <img src="https://cdn-icons-png.flaticon.com/512/860/860790.png" alt="Reset" />
+      Reset
+    </button>
   </div>
 
   <script>
@@ -52,6 +72,9 @@
     const ctx = canvas.getContext("2d");
     const size = 8;
     const cell = canvas.width / size;
+
+    const horseImg = new Image();
+    horseImg.src = "https://thumbs.dreamstime.com/b/black-knight-chess-piece-silhouette-white-background-illustration-260876553.jpg";
 
     let tour = [];
     let step = 0;
@@ -114,10 +137,10 @@
     }
 
     function drawKnight(x, y) {
-      ctx.fillStyle = "blue";
-      ctx.beginPath();
-      ctx.arc(x * cell + cell / 2, y * cell + cell / 2, cell / 3, 0, 2 * Math.PI);
-      ctx.fill();
+      horseImg.onload = () => {
+        ctx.drawImage(horseImg, x * cell + 4, y * cell + 4, cell - 8, cell - 8);
+      };
+      ctx.drawImage(horseImg, x * cell + 4, y * cell + 4, cell - 8, cell - 8);
     }
 
     function nextMove() {
