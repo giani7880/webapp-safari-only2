@@ -49,7 +49,6 @@
       padding: 0;
       overflow: hidden;
     }
-
   </style>
 </head>
 <body>
@@ -57,7 +56,6 @@
   <canvas id="board" width="360" height="360"></canvas>
 
   <div class="controls">
-    <button id="manualBtn" class="circle-button" title="Modalità manuale">✍️</button>
     <button id="startBtn" class="circle-button" title="Avvia algoritmo">▶</button>
     <button id="resetBtn" class="circle-button" title="Reset">↻</button>
   </div>
@@ -68,12 +66,14 @@
     const size = 8;
     const cell = canvas.width / size;
 
-    let tour = [];
-    let step = 0;
-    let manualMode = false;
-    let currentPos = null;
+    let tour = [];          // percorso calcolato (solo per modalità automatica / suggerimenti)
+    let manualPath = [];    // percorso scelto manualmente dall'utente
+    let currentPos = null;  // posizione corrente del cavallo [x,y]
+    let step = 0;           // indice passo per algoritmo automatico/suggerimenti
+    let showHint = false;   // flag per mostrare suggerimenti lampeggianti
     let blinkOn = true;
     let blinkInterval = null;
+    let congratShown = false; // per mostrare avviso tour completato una sola volta
 
     function valid(x, y) {
       return x >= 0 && x < size && y >= 0 && y < size;
@@ -87,6 +87,7 @@
       return moves.filter(([mx, my]) => valid(mx, my));
     }
 
+    // Warnsdorff algoritmo per il tour completo
     function warnsdorffTour(startX, startY) {
       const board = Array.from({ length: size }, () => Array(size).fill(-1));
       board[startY][startX] = 0;
@@ -107,10 +108,10 @@
         board[nextMove[1]][nextMove[0]] = step;
         path.push(nextMove);
       }
-
       return path;
     }
 
+    // Disegna la scacchiera con evidenze
     function drawBoard() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.font = "bold 14px sans-serif";
@@ -121,9 +122,9 @@
           // Colore base scacchiera
           let baseColor = (x + y) % 2 === 0 ? "#ffffff" : "#000000";
 
-          // Se la cella è stata visitata in modalità manuale la coloriamo di giallo
-          if (manualMode && tour.some(([tx, ty]) => tx === x && ty === y)) {
-            baseColor = "#ffea00";  // giallo brillante
+          // Celle visitate in manuale: giallo
+          if (manualPath.some(([tx, ty]) => tx === x && ty === y)) {
+            baseColor = "#ffea00";
           }
 
           ctx.fillStyle = baseColor;
@@ -131,10 +132,10 @@
         }
       }
 
-      for (let i = 0; i < step; i++) {
-        const [x, y] = tour[i];
-        // evidenziamo comunque le mosse già fatte in modalità automatica
-        if (!manualMode) {
+      // Se in modalità automatica o in suggerimento disegniamo il percorso fino a step
+      if (!manualPath.length && tour.length) {
+        for (let i = 0; i < step; i++) {
+          const [x, y] = tour[i];
           ctx.fillStyle = "rgba(0, 255, 170, 0.5)";
           ctx.fillRect(x * cell, y * cell, cell, cell);
           ctx.fillStyle = "#000";
@@ -142,19 +143,19 @@
         }
       }
 
+      // Disegna il cavallo (posizione corrente)
       if (currentPos) {
-        // evidenzia la posizione corrente del cavallo
         ctx.fillStyle = "blue";
         ctx.beginPath();
         ctx.arc(currentPos[0] * cell + cell / 2, currentPos[1] * cell + cell / 2, cell / 3, 0, 2 * Math.PI);
         ctx.fill();
 
-        if (manualMode) {
-          // evidenzia mosse valide per l’utente lampeggianti
+        // Se si devono mostrare suggerimenti (solo se ci sono e siamo in manuale con showHint attivo)
+        if (showHint && manualPath.length) {
           const moves = knightMoves(currentPos[0], currentPos[1]);
           for (const [mx, my] of moves) {
-            // evidenziamo solo le mosse valide non visitate
-            if (!tour.some(([tx, ty]) => tx === mx && ty === my)) {
+            // evidenziamo solo mosse valide (non visitate) lampeggianti celesti
+            if (!manualPath.some(([tx, ty]) => tx === mx && ty === my)) {
               ctx.fillStyle = blinkOn ? "rgba(0, 255, 255, 0.8)" : "rgba(0, 255, 255, 0.3)";
               ctx.fillRect(mx * cell, my * cell, cell, cell);
             }
@@ -163,131 +164,129 @@
       }
     }
 
-    function nextMove() {
-      if (manualMode) return; // disabilitiamo next in manuale
-      if (step >= tour.length) {
+    // Avanzamento automatico con clic su startBtn in modalità automatica
+    function advanceAuto() {
+      if (manualPath.length) {
+        // Modalità manuale con suggerimenti attivi: avanzare algoritmo e indicare prossimo passo automatico
+        if (!tour.length) {
+          // Calcolo percorso Warnsdorff a partire da currentPos
+          const start = currentPos || manualPath[manualPath.length - 1];
+          tour = warnsdorffTour(start[0], start[1]);
+          step = 1; // Il primo passo è la posizione corrente
+        } else {
+          step++;
+        }
+
+        // Controlla fine tour manuale + suggerimenti
+        if (step >= tour.length) {
+          step = tour.length; // fermati
+          showCongrats();
+          showHint = false;
+        } else {
+          // Avanza posizione ma NON spostare automaticamente cavallo (solo suggerisce)
+          // Segnala showHint per lampeggio mosse valide
+          showHint = true;
+        }
+        drawBoard();
+      } else {
+        // Modalità automatica pura (nessuna posizione manuale)
+        if (!tour.length) {
+          tour = warnsdorffTour(0, 0);
+          step = 0;
+          congratShown = false;
+        }
+        if (step < tour.length) {
+          currentPos = tour[step];
+          step++;
+          drawBoard();
+          if (step === tour.length) showCongrats();
+        }
+      }
+    }
+
+    // Mostra alert congratulazioni solo una volta per sessione
+    function showCongrats() {
+      if (!congratShown) {
         alert("Tour completato!");
-        return;
+        congratShown = true;
       }
-      drawBoard();
-      const [x, y] = tour[step];
-      drawKnight(x, y);
-      step++;
     }
 
-    function drawKnight(x, y) {
-      // Rimosso perché la posizione attuale è già disegnata in drawBoard
-    }
-
+    // Reset completo: rimuove tutto, modalità manuale pronta, scacchiera vuota
     function resetBoard() {
-      clearInterval(blinkInterval);
-      manualMode = false;
+      tour = [];
+      manualPath = [];
       currentPos = null;
-      tour = warnsdorffTour(0, 0);
-      if (!tour) {
-        alert("Impossibile calcolare il tour del cavallo da questa posizione");
-        return;
-      }
       step = 0;
-      drawBoard();
+      showHint = false;
+      congratShown = false;
+      if (blinkInterval) clearInterval(blinkInterval);
+      blinkOn = true;
       blinkInterval = setInterval(() => {
         blinkOn = !blinkOn;
-        if (manualMode) drawBoard();
-      }, 600);
-    }
-
-    function startAlgorithm() {
-      manualMode = false;
-      currentPos = null;
-      step = 0;
-      drawBoard();
-      let interval = setInterval(() => {
-        if (step >= tour.length) {
-          clearInterval(interval);
-          alert("Tour completato!");
-          return;
-        }
-        const [x, y] = tour[step];
-        currentPos = [x, y];
-        drawBoard();
-        step++;
+        if (showHint) drawBoard();
       }, 500);
+      drawBoard();
     }
 
-    // Listener per i click in modalità manuale
-    canvas.addEventListener("click", e => {
-      if (!manualMode) return;
-
+    // Handler click sulla scacchiera per modalità manuale
+    function onBoardClick(event) {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / cell);
-      const y = Math.floor((e.clientY - rect.top) / cell);
+      const x = Math.floor((event.clientX - rect.left) / cell);
+      const y = Math.floor((event.clientY - rect.top) / cell);
 
       if (!valid(x, y)) return;
 
+      // Se in modalità automatica pura, ignora click manuale
+      if (!manualPath.length && tour.length) return;
+
+      // Se prima mossa manuale: posiziona cavallo
       if (!currentPos) {
-        // prima selezione posizione cavallo
         currentPos = [x, y];
-        step = 0;
-        tour = [[x, y]];
+        manualPath.push(currentPos);
         drawBoard();
         return;
       }
 
-      const validMoves = knightMoves(currentPos[0], currentPos[1]);
-      const alreadyVisited = tour.some(([tx, ty]) => tx === x && ty === y);
+      // Verifica che la mossa sia valida per il cavallo
+      const [cx, cy] = currentPos;
+      const validMoves = knightMoves(cx, cy);
 
-      if (validMoves.some(([mx, my]) => mx === x && my === y) && !alreadyVisited) {
-        currentPos = [x, y];
-        tour.push(currentPos);
-        step++;
-        drawBoard();
-      } else {
-        alert("Mossa non valida o casella già visitata!");
-      }
-    });
+      // Deve essere una mossa valida e non visitata
+      const isValidMove = validMoves.some(([vx, vy]) => vx === x && vy === y)
+        && !manualPath.some(([px, py]) => px === x && py === y);
 
-    // Pulsanti controllo
-    document.getElementById("manualBtn").addEventListener("click", () => {
-      manualMode = true;
-      currentPos = null;
-      tour = [];
+      if (!isValidMove) return;
+
+      // Aggiungi nuova posizione
+      currentPos = [x, y];
+      manualPath.push(currentPos);
+      showHint = false;  // se muovo manualmente rimuovo suggerimenti
       step = 0;
+      tour = []; // azzera percorso suggerimenti
+      congratShown = false; // permetti di rivedere messaggio se completato
+
       drawBoard();
-      if (blinkInterval) clearInterval(blinkInterval);
-      blinkInterval = setInterval(() => {
-        blinkOn = !blinkOn;
-        if (manualMode) drawBoard();
-      }, 600);
-    });
 
-    document.getElementById("startBtn").addEventListener("click", () => {
-      if (!tour.length) {
-        alert("Inserisci almeno una posizione iniziale in modalità manuale o resetta per partire.");
-        return;
+      // Controlla se ha completato tutte le caselle (manuale)
+      if (manualPath.length === size * size) {
+        showCongrats();
       }
-      startAlgorithm();
-    });
-
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      resetBoard();
-    });
-
-    // Disabilita zoom su mobile (doppio tap e pinch)
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-      const now = new Date().getTime();
-      if (now - lastTouchEnd <= 300) {
-        event.preventDefault();
-      }
-      lastTouchEnd = now;
-    }, false);
-
-    document.addEventListener('gesturestart', function (e) {
-      e.preventDefault();
-    });
+    }
 
     // Avvio iniziale
     resetBoard();
+
+    // Pulsanti
+    document.getElementById("startBtn").onclick = () => {
+      advanceAuto();
+    };
+
+    document.getElementById("resetBtn").onclick = () => {
+      resetBoard();
+    };
+
+    canvas.addEventListener("click", onBoardClick);
   </script>
 </body>
 </html>
