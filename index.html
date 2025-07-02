@@ -17,7 +17,7 @@
     button {
       margin-top: 30px;
       padding: 20px 40px;
-      font-size: 28px;
+      font-size: 36px;
       font-weight: bold;
       cursor: pointer;
       border-radius: 12px;
@@ -35,7 +35,7 @@
 <body>
   <h2>Tour del Cavallo ♞ - Calcolo con algoritmo</h2>
   <canvas id="board" width="360" height="360"></canvas><br />
-  <button id="nextBtn">▶ Avanti</button>
+  <button id="nextBtn">▶</button>
 
   <script>
     const canvas = document.getElementById("board");
@@ -96,7 +96,7 @@
 
       for (let i = 0; i < step; i++) {
         const [x, y] = tour[i];
-        ctx.fillStyle = "rgba(255, 255, 0, 0.6)";
+        ctx.fillStyle = "rgba(0, 255, 0, 0.4)";
         ctx.fillRect(x * cell, y * cell, cell, cell);
         ctx.fillStyle = "black";
         ctx.fillText(i + 1, x * cell + 4, y * cell + 4);
