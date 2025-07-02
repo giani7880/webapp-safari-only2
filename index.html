@@ -40,23 +40,15 @@
       align-items: center;
       justify-content: center;
       touch-action: manipulation;
+      user-select: none;
     }
 
-  #resetBtn {
-  background: linear-gradient(145deg, #a3f7cf, #79d2b8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  overflow: hidden;
-}
-
-#resetBtn img {
-  width: 70%;
-  height: 70%;
-  object-fit: contain;
-  pointer-events: none;
-}
+    #resetBtn {
+      background: linear-gradient(145deg, #a3f7cf, #79d2b8);
+      padding: 0;
+      overflow: hidden;
+      font-size: 32px; /* ingrandisco un po’ l’icona */
+    }
   </style>
 </head>
 <body>
@@ -65,9 +57,7 @@
 
   <div class="controls">
     <button id="nextBtn" class="circle-button">▶</button>
-    <button id="resetBtn" class="circle-button">
-      <img src="reset.png" alt="Reset" />
-    </button>
+    <button id="resetBtn" class="circle-button" aria-label="Reset">↻</button>
   </div>
 
   <script>
